@@ -15,7 +15,10 @@ body {
 
 .topnav {
   overflow: hidden;
-  background-color: #333;
+  background-color: #ffffff;
+  background-image: url("banner.png");
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .topnav a {
