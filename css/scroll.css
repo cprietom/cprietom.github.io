@@ -2,6 +2,8 @@
 .pn-ProductNav_Wrapper {
 	position: relative;
 	padding: 0 11px;
+	margin: 0 auto;
+	width: 800px;
 }
 
 .pn-ProductNav {
