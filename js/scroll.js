@@ -1,7 +1,30 @@
 var SETTINGS = {
     navBarTravelling: false,
     navBarTravelDirection: "",
-	 navBarTravelDistance: 150
+    navBarTravelDistance: 600
+}
+
+var colours = {
+    0: "#867100",
+    1: "#7F4200",
+    2: "#99813D",
+    3: "#40FEFF",
+    4: "#14CC99",
+    5: "#00BAFF",
+    6: "#0082B2",
+    7: "#B25D7A",
+    8: "#00FF17",
+    9: "#006B49",
+    10: "#00B27A",
+    11: "#996B3D",
+    12: "#CC7014",
+    13: "#40FF8C",
+    14: "#FF3400",
+    15: "#ECBB5E",
+    16: "#ECBB0C",
+    17: "#B9D912",
+    18: "#253A93",
+    19: "#125FB9",
 }
 
 document.documentElement.classList.remove("no-js");
@@ -10,11 +33,16 @@ document.documentElement.classList.add("js");
 // Out advancer buttons
 var pnAdvancerLeft = document.getElementById("pnAdvancerLeft");
 var pnAdvancerRight = document.getElementById("pnAdvancerRight");
+// the indicator
+var pnIndicator = document.getElementById("pnIndicator");
 
 var pnProductNav = document.getElementById("pnProductNav");
 var pnProductNavContents = document.getElementById("pnProductNavContents");
 
 pnProductNav.setAttribute("data-overflowing", determineOverflow(pnProductNavContents, pnProductNav));
+
+// Set the indicator
+moveIndicator(pnProductNav.querySelector("[aria-selected=\"true\"]"), colours[0]);
 
 // Handle the scroll of the horizontal container
 var last_known_scroll_position = 0;
@@ -24,10 +52,10 @@ function doSomething(scroll_pos) {
     pnProductNav.setAttribute("data-overflowing", determineOverflow(pnProductNavContents, pnProductNav));
 }
 
-pnProductNav.addEventListener("scroll", function() {
+pnProductNav.addEventListener("scroll", function () {
     last_known_scroll_position = window.scrollY;
     if (!ticking) {
-        window.requestAnimationFrame(function() {
+        window.requestAnimationFrame(function () {
             doSomething(last_known_scroll_position);
             ticking = false;
         });
@@ -36,8 +64,8 @@ pnProductNav.addEventListener("scroll", function() {
 });
 
 
-pnAdvancerLeft.addEventListener("click", function() {
-	// If in the middle of a move return
+pnAdvancerLeft.addEventListener("click", function () {
+    // If in the middle of a move return
     if (SETTINGS.navBarTravelling === true) {
         return;
     }
@@ -62,7 +90,7 @@ pnAdvancerLeft.addEventListener("click", function() {
     pnProductNav.setAttribute("data-overflowing", determineOverflow(pnProductNavContents, pnProductNav));
 });
 
-pnAdvancerRight.addEventListener("click", function() {
+pnAdvancerRight.addEventListener("click", function () {
     // If in the middle of a move return
     if (SETTINGS.navBarTravelling === true) {
         return;
@@ -93,7 +121,7 @@ pnAdvancerRight.addEventListener("click", function() {
 
 pnProductNavContents.addEventListener(
     "transitionend",
-    function() {
+    function () {
         // get the value of the transform, apply that to the current scroll position (so get the scroll pos first) and then remove the transform
         var styleOfTransform = window.getComputedStyle(pnProductNavContents, null);
         var tr = styleOfTransform.getPropertyValue("-webkit-transform") || styleOfTransform.getPropertyValue("transform");
@@ -113,13 +141,30 @@ pnProductNavContents.addEventListener(
 );
 
 // Handle setting the currently active link
-pnProductNavContents.addEventListener("click", function(e) {
-	var links = [].slice.call(document.querySelectorAll(".pn-ProductNav_Link"));
-	links.forEach(function(item) {
-		item.setAttribute("aria-selected", "false");
-	})
-	e.target.setAttribute("aria-selected", "true");
-})
+pnProductNavContents.addEventListener("click", function (e) {
+    var links = [].slice.call(document.querySelectorAll(".pn-ProductNav_Link"));
+    links.forEach(function (item) {
+        item.setAttribute("aria-selected", "false");
+    })
+    e.target.setAttribute("aria-selected", "true");
+    // Pass the clicked item and it's colour to the move indicator function
+    moveIndicator(e.target, colours[links.indexOf(e.target)]);
+});
+
+// var count = 0;
+function moveIndicator(item, color) {
+    var textPosition = item.getBoundingClientRect();
+    var container = pnProductNavContents.getBoundingClientRect().left;
+    var distance = textPosition.left - container;
+    var scroll = pnProductNavContents.scrollLeft;
+    pnIndicator.style.transform = "translateX(" + (distance + scroll) + "px) scaleX(" + textPosition.width * 0.01 + ")";
+    // count = count += 100;
+    // pnIndicator.style.transform = "translateX(" + count + "px)";
+
+    if (color) {
+        pnIndicator.style.backgroundColor = color;
+    }
+}
 
 function determineOverflow(content, container) {
     var containerMetrics = container.getBoundingClientRect();
@@ -128,7 +173,7 @@ function determineOverflow(content, container) {
     var contentMetrics = content.getBoundingClientRect();
     var contentMetricsRight = Math.floor(contentMetrics.right);
     var contentMetricsLeft = Math.floor(contentMetrics.left);
-	 if (containerMetricsLeft > contentMetricsLeft && containerMetricsRight < contentMetricsRight) {
+    if (containerMetricsLeft > contentMetricsLeft && containerMetricsRight < contentMetricsRight) {
         return "both";
     } else if (contentMetricsLeft < containerMetricsLeft) {
         return "left";
@@ -138,3 +183,101 @@ function determineOverflow(content, container) {
         return "none";
     }
 }
+
+/**
+ * @fileoverview dragscroll - scroll area by dragging
+ * @version 0.0.8
+ *
+ * @license MIT, see http://github.com/asvd/dragscroll
+ * @copyright 2015 asvd <heliosframework@gmail.com>
+ */
+
+
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory((root.dragscroll = {}));
+    }
+}(this, function (exports) {
+    var _window = window;
+    var _document = document;
+    var mousemove = 'mousemove';
+    var mouseup = 'mouseup';
+    var mousedown = 'mousedown';
+    var EventListener = 'EventListener';
+    var addEventListener = 'add' + EventListener;
+    var removeEventListener = 'remove' + EventListener;
+    var newScrollX, newScrollY;
+
+    var dragged = [];
+    var reset = function (i, el) {
+        for (i = 0; i < dragged.length;) {
+            el = dragged[i++];
+            el = el.container || el;
+            el[removeEventListener](mousedown, el.md, 0);
+            _window[removeEventListener](mouseup, el.mu, 0);
+            _window[removeEventListener](mousemove, el.mm, 0);
+        }
+
+        // cloning into array since HTMLCollection is updated dynamically
+        dragged = [].slice.call(_document.getElementsByClassName('dragscroll'));
+        for (i = 0; i < dragged.length;) {
+            (function (el, lastClientX, lastClientY, pushed, scroller, cont) {
+                (cont = el.container || el)[addEventListener](
+                    mousedown,
+                    cont.md = function (e) {
+                        if (!el.hasAttribute('nochilddrag') ||
+                            _document.elementFromPoint(
+                                e.pageX, e.pageY
+                            ) == cont
+                        ) {
+                            pushed = 1;
+                            lastClientX = e.clientX;
+                            lastClientY = e.clientY;
+
+                            e.preventDefault();
+                        }
+                    }, 0
+                );
+
+                _window[addEventListener](
+                    mouseup, cont.mu = function () {
+                        pushed = 0;
+                    }, 0
+                );
+
+                _window[addEventListener](
+                    mousemove,
+                    cont.mm = function (e) {
+                        if (pushed) {
+                            (scroller = el.scroller || el).scrollLeft -=
+                                newScrollX = (-lastClientX + (lastClientX = e.clientX));
+                            scroller.scrollTop -=
+                                newScrollY = (-lastClientY + (lastClientY = e.clientY));
+                            if (el == _document.body) {
+                                (scroller = _document.documentElement).scrollLeft -= newScrollX;
+                                scroller.scrollTop -= newScrollY;
+                            }
+                        }
+                    }, 0
+                );
+            })(dragged[i++]);
+        }
+    }
+
+
+    if (_document.readyState == 'complete') {
+        reset();
+    } else {
+        _window[addEventListener]('load', reset, 0);
+    }
+
+    exports.reset = reset;
+}));
+
+
+		
+		
