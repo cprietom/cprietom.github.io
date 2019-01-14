@@ -1,3 +1,8 @@
-.center {
-  text-align: center;
- }
+.jumbotron {
+  position: relative;
+  border: 1px dashed deeppink;
+}
+
+.diapositivas {
+	padding: 20px 0px 20px 0px;
+}
