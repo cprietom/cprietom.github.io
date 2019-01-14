@@ -1,0 +1,41 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background-color: #8e44ad;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.card {
+  background-color: #fff;
+  min-width: 100%;
+  min-height: 200px;
+}
+
+/* make card a flex-container:*/
+.card {
+	display: flex;
+}
+
+.card--content {
+  background-color: #e74c3c;
+  min-width: 200px;
+  margin: 5px;
+}
+
+/* tell the browser to only scroll the card section */
+.card {
+	overflow-x: auto;
+}
+
+/* Hide the scrollbar */
+.card::-webkit-scrollbar {
+  display: none;
+}
